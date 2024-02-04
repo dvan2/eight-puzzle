@@ -5,6 +5,7 @@ WIDTH = 3
 HEIGHT = 3
 
 GOAL_STATE = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "b"]]
+GOAL_STATE = ['1', '2', '3', '4', '5', '6', '7', '8', 'b']
 
 class Node:
     def __init__(self, state, parent, h_value):
@@ -37,14 +38,7 @@ class BestFirst:
 class NotReachable(Exception):
     pass
 
-def calc_huristic(world):
-        h_value = 0
-        for i in range(WIDTH):
-            for j in range(HEIGHT):
-                if world[i][j] != GOAL_STATE[i][j]:
-                    if world[i][j] != "b":
-                        h_value += 1
-        return h_value
+
 def find_b(state):
     for i in range(WIDTH):
         for j in range(HEIGHT):
@@ -117,7 +111,12 @@ class Board:
                 if self.world[i][j] == "b":
                     return (i, j)
 
-    
+    def calc_huristic(self, state):
+        h_value = 0
+        for i in range(WIDTH* HEIGHT):
+            if state[i] != 'b' and state[i]!= GOAL_STATE[i]:
+                h_value += 1
+        return h_value
 
     def start(self):
         huristic_state = calc_huristic(self.world)
