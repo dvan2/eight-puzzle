@@ -1,8 +1,11 @@
 import heapq
 import copy
+import random
+import math
 
 WIDTH = 3
 HEIGHT = 3
+TRIALS = 5
 
 GOAL_STATE = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "b"]]
 
@@ -47,11 +50,8 @@ class BestFirst:
         node = heapq.heappop(self.frontier)
         return node[1]
 
-
 class NotReachable(Exception):
     pass
-
-
 
 def find_b(state):
     for i in range(WIDTH):
@@ -86,16 +86,20 @@ def swap(bpos, to_move, world):
     else:
         return None
 
+def generate_board():
+    random_board = ['1', '2', '3', '4', '5', '6', '7', '8', 'b']
+    random.shuffle(random_board)
+    return random_board
+
 class Board:
     def __init__(self, world):
-        self.world_list = self.make_list(world)
+        self.world_list = world
         self.world = [
             self.world_list[i : i + 3] for i in range(0, len(self.world_list), 3)
         ]
         if self.count_inversions() % 2 != 0:
             raise NotReachable("Cannot reach goal state")
         self.h_value = 0
-        self.pos = self.get_position()
         self.cost = 0
 
     def make_list(self, world):
@@ -118,12 +122,6 @@ class Board:
                         inversions += 1
 
         return inversions
-
-    def get_position(self):
-        for i in range(WIDTH):
-            for j in range(HEIGHT):
-                if self.world[i][j] == "b":
-                    return (i, j)
 
     def calc_huristic(self, world):
         h_value = 0
@@ -150,17 +148,20 @@ class Board:
             actions = valid_actions(node.state)
 
             if node.state == GOAL_STATE:
-                print("Done")
+                steps = 0
                 states = node.solution()
                 for state in states:
+                    # for row in state:
+                    #     print(row)
+                    # print("------")
                     print("(", end="")
                     for row in state:
                         for tile in row:
-                            print(f"{tile} " ,end='')
-                    print(")", end="")
-                    print()
-                print(f"Cost: {self.cost}")
-                return
+                            print(f"{tile}" ,end='')
+                    print(")-> ", end="")
+                    steps += 1
+                print(f"Total steps: {steps}")
+                return steps
             self.cost += 1
 
             state = tuple(tuple(row) for row in node.state)
@@ -177,11 +178,43 @@ class Board:
     def calc_evaluation(self, h_value, g_value):
         return h_value + g_value
 
-
+class Boardh2(Board):
+    def calc_huristic(self, world):
+        h_value = 0
+        for i in range(WIDTH):
+            for j in range(HEIGHT):
+                if world[i][j] != 'b' and world[i][j] != GOAL_STATE[i][j]:
+                    for si in range(WIDTH):
+                        for sj in range(HEIGHT):
+                            if GOAL_STATE[si][sj] == world[i][j]:
+                                h_value += abs(i - si) + abs(j - sj)
+        return h_value
+        
+class Boardh3(Board):
+    def calc_huristic(self, world):
+        h_value = 0
+        for i in range(WIDTH):
+            for j in range(HEIGHT):
+                if world[i][j] != 'b' and world[i][j] != GOAL_STATE[i][j]:
+                    for si in range(WIDTH):
+                        for sj in range(HEIGHT):
+                            if GOAL_STATE[si][sj] == world[i][j]:
+                                h_value += math.sqrt((i - si)**2 + (j - sj) ** 2)
+        return h_value
+ 
 
 class BoardAStar(Board):
     def calc_evaluation(self, h_value, g_value):
         return h_value + g_value
+
+class BoardAStarh2(Boardh2):
+    def calc_evaluation(self, h_value, g_value):
+        return h_value + g_value
+
+class BoardAStarh3(Boardh3):
+    def calc_evaluation(self, h_value, g_value):
+        return h_value + g_value
+
 
 def show(world):
     print()
@@ -191,11 +224,38 @@ def show(world):
 
 
 def main():
-    world = "b 1 3 4 2 5 7 8 6"
-    # bestfirst = Board(world)
-    # bestfirst.start()
-    astar = BoardAStar(world)
+    board = generate_board()
+    bfs = Board(board)
+    bfsh2 = Boardh2(board)
+    bfsh3 = Boardh3(board)
+
+    astar = BoardAStar(board)
+    astarh2 = BoardAStarh2(board)
+    astarh3 = BoardAStarh3(board)
+
+    print("GBFS, h1, Tile out of place:")
+    bfs.start()
+    print("-----------------")
+    print("GBFS, h2, Manhattan distance:")
+    bfsh2.start()
+    print("-----------------")
+
+    print("GBFS, h3, Euclidean Distance")
+    bfsh3.start()
+    print("-----------------")
+    
+
+    print("Astar h1")
     astar.start()
+    print("-----------------")
+    print("Astar h2")
+    astarh2.start()
+    print("-----------------")
+    print("Astar h3")
+    astarh3.start()
+    print("-----------------")
+
+    
     
     
 
