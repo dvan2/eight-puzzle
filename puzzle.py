@@ -7,16 +7,30 @@ HEIGHT = 3
 GOAL_STATE = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "b"]]
 
 class Node:
-    def __init__(self, state, parent, h_value):
+    def __init__(self, state, parent, h_value, g_value, evaluation):
         self.state = state
         self.h_value = h_value
         self.parent = parent
+        self.g = g_value
+        self.evaluation = evaluation
 
     def __lt__(self, other):
-        return self.heuristic_value() < other.heuristic_value()
+        # return self.heuristic_value() < other.heuristic_value()
+        return self.evaluation_value() < other.evaluation_value()
 
     def heuristic_value(self):
         return self.h_value
+    
+    def evaluation_value(self):
+        return self.evaluation
+
+    def solution(self):
+        node = self
+        path = []
+        while node is not None:
+            path.append(node.state)
+            node = node.parent
+        return list(reversed(path))
 
 
 class BestFirst:
@@ -37,14 +51,8 @@ class BestFirst:
 class NotReachable(Exception):
     pass
 
-def calc_huristic(world):
-        h_value = 0
-        for i in range(WIDTH):
-            for j in range(HEIGHT):
-                if world[i][j] != GOAL_STATE[i][j]:
-                    if world[i][j] != "b":
-                        h_value += 1
-        return h_value
+
+
 def find_b(state):
     for i in range(WIDTH):
         for j in range(HEIGHT):
@@ -117,13 +125,20 @@ class Board:
                 if self.world[i][j] == "b":
                     return (i, j)
 
-    
+    def calc_huristic(self, world):
+        h_value = 0
+        for i in range(WIDTH):
+            for j in range(HEIGHT):
+                if world[i][j] != GOAL_STATE[i][j]:
+                    if world[i][j] != "b":
+                        h_value += 1
+        return h_value
 
     def start(self):
-        huristic_state = calc_huristic(self.world)
+        huristic_state = self.calc_huristic(self.world)
         if huristic_state == 0:
             return
-        start = Node(self.world, None, huristic_state)
+        start = Node(self.world, None, huristic_state, 0, 0)
         frontier = BestFirst()
 
         frontier.add(start, huristic_state)
@@ -136,8 +151,15 @@ class Board:
 
             if node.state == GOAL_STATE:
                 print("Done")
-                show(node.state)
-                print(self.cost)
+                states = node.solution()
+                for state in states:
+                    print("(", end="")
+                    for row in state:
+                        for tile in row:
+                            print(f"{tile} " ,end='')
+                    print(")", end="")
+                    print()
+                print(f"Cost: {self.cost}")
                 return
             self.cost += 1
 
@@ -145,12 +167,21 @@ class Board:
             self.explored.add(state)
 
             for state in actions:
-                huristic_state = calc_huristic(state)
+                huristic_state = self.calc_huristic(state)
+                evaulation = self.calc_evaluation(huristic_state, self.cost)
                 state_hash = tuple(tuple(row) for row in state)
                 if state_hash not in self.explored:
-                    child = Node(state, node, huristic_state)
+                    child = Node(state, node, huristic_state, self.cost, evaulation)
                     frontier.add(child, huristic_state)
 
+    def calc_evaluation(self, h_value, g_value):
+        return h_value + g_value
+
+
+
+class BoardAStar(Board):
+    def calc_evaluation(self, h_value, g_value):
+        return h_value + g_value
 
 def show(world):
     print()
@@ -161,9 +192,12 @@ def show(world):
 
 def main():
     world = "b 1 3 4 2 5 7 8 6"
-    b = Board(world)
-    b.start()
-
+    # bestfirst = Board(world)
+    # bestfirst.start()
+    astar = BoardAStar(world)
+    astar.start()
+    
+    
 
 if __name__ == "__main__":
     main()
