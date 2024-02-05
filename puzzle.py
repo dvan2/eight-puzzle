@@ -1,3 +1,5 @@
+#Install python: https://www.python.org/downloads/
+#Recommend using vscode to set up python environment: https://code.visualstudio.com/docs/python/python-tutorial
 import heapq
 import copy
 import random
@@ -9,6 +11,7 @@ TRIALS = 5
 MAX_STATES = 1000
 
 GOAL_STATE = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "b"]]
+
 
 class Node:
     def __init__(self, state, parent, h_value, g_value, evaluation):
@@ -24,7 +27,7 @@ class Node:
 
     def heuristic_value(self):
         return self.h_value
-    
+
     def evaluation_value(self):
         return self.evaluation
 
@@ -51,29 +54,33 @@ class BestFirst:
         node = heapq.heappop(self.frontier)
         return node[1]
 
+
 class NotReachable(Exception):
     pass
+
 
 def find_b(state):
     for i in range(WIDTH):
         for j in range(HEIGHT):
-            if state[i][j] == 'b':
+            if state[i][j] == "b":
                 return (i, j)
+
 
 # given a state, return all possible actions
 def valid_actions(state):
-    i, j= find_b(state)
+    i, j = find_b(state)
     valid_move = [
-        swap((i,j), (i - 1, j), state),
-        swap((i,j), (i + 1, j), state),
-        swap((i,j), (i, j + 1), state),
-        swap((i,j), (i, j - 1), state),
+        swap((i, j), (i - 1, j), state),
+        swap((i, j), (i + 1, j), state),
+        swap((i, j), (i, j + 1), state),
+        swap((i, j), (i, j - 1), state),
     ]
     result = []
     for state in valid_move:
         if state != None:
             result.append((state))
     return result
+
 
 def swap(bpos, to_move, world):
     i, j = to_move
@@ -87,10 +94,12 @@ def swap(bpos, to_move, world):
     else:
         return None
 
+
 def generate_board():
-    random_board = ['1', '2', '3', '4', '5', '6', '7', '8', 'b']
+    random_board = ["1", "2", "3", "4", "5", "6", "7", "8", "b"]
     random.shuffle(random_board)
     return random_board
+
 
 class Board:
     def __init__(self, world):
@@ -152,13 +161,10 @@ class Board:
                 steps = 0
                 states = node.solution()
                 for state in states:
-                    # for row in state:
-                    #     print(row)
-                    # print("------")
                     print("(", end="")
                     for row in state:
                         for tile in row:
-                            print(f"{tile}" ,end='')
+                            print(f"{tile}", end="")
                     print(")-> ", end="")
                     steps += 1
                 print(f"Total steps: {steps}")
@@ -182,38 +188,42 @@ class Board:
     def calc_evaluation(self, h_value, g_value):
         return h_value + g_value
 
+
 class Boardh2(Board):
     def calc_huristic(self, world):
         h_value = 0
         for i in range(WIDTH):
             for j in range(HEIGHT):
-                if world[i][j] != 'b' and world[i][j] != GOAL_STATE[i][j]:
+                if world[i][j] != "b" and world[i][j] != GOAL_STATE[i][j]:
                     for si in range(WIDTH):
                         for sj in range(HEIGHT):
                             if GOAL_STATE[si][sj] == world[i][j]:
                                 h_value += abs(i - si) + abs(j - sj)
         return h_value
-        
+
+
 class Boardh3(Board):
     def calc_huristic(self, world):
         h_value = 0
         for i in range(WIDTH):
             for j in range(HEIGHT):
-                if world[i][j] != 'b' and world[i][j] != GOAL_STATE[i][j]:
+                if world[i][j] != "b" and world[i][j] != GOAL_STATE[i][j]:
                     for si in range(WIDTH):
                         for sj in range(HEIGHT):
                             if GOAL_STATE[si][sj] == world[i][j]:
-                                h_value += math.sqrt((i - si)**2 + (j - sj) ** 2)
+                                h_value += math.sqrt((i - si) ** 2 + (j - sj) ** 2)
         return h_value
- 
+
 
 class BoardAStar(Board):
     def calc_evaluation(self, h_value, g_value):
         return h_value + g_value
 
+
 class BoardAStarh2(Boardh2):
     def calc_evaluation(self, h_value, g_value):
         return h_value + g_value
+
 
 class BoardAStarh3(Boardh3):
     def calc_evaluation(self, h_value, g_value):
@@ -228,7 +238,6 @@ def show(world):
 
 
 def main():
-    
     board = generate_board()
     try:
         bfs = Board(board)
@@ -252,7 +261,6 @@ def main():
     print("GBFS, h3, Euclidean Distance")
     bfsh3.start()
     print("-----------------")
-    
 
     print("Astar h1")
     astar.start()
@@ -264,8 +272,6 @@ def main():
     astarh3.start()
     print("-----------------")
 
-    
-    
-    
+
 if __name__ == "__main__":
     main()
