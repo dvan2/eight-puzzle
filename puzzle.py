@@ -6,6 +6,7 @@ import math
 WIDTH = 3
 HEIGHT = 3
 TRIALS = 5
+MAX_STATES = 1000
 
 GOAL_STATE = [["1", "2", "3"], ["4", "5", "6"], ["7", "8", "b"]]
 
@@ -163,6 +164,9 @@ class Board:
                 print(f"Total steps: {steps}")
                 return steps
             self.cost += 1
+            if self.cost == MAX_STATES:
+                print("Too long to calculate")
+                return
 
             state = tuple(tuple(row) for row in node.state)
             self.explored.add(state)
@@ -224,8 +228,13 @@ def show(world):
 
 
 def main():
+    
     board = generate_board()
-    bfs = Board(board)
+    try:
+        bfs = Board(board)
+    except NotReachable:
+        print("The goal state cannot be reached")
+        return
     bfsh2 = Boardh2(board)
     bfsh3 = Boardh3(board)
 
@@ -258,6 +267,5 @@ def main():
     
     
     
-
 if __name__ == "__main__":
     main()
